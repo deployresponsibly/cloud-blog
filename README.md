@@ -14,7 +14,6 @@ For how it's built and why, read the project write-up: [This site](https://deplo
 | `src/styles/global.css` | The design |
 | `infra/` | Terraform for the AWS stack |
 | `.github/workflows/` | CI checks and the deploy pipeline |
-| `TODO.md` | Open security follow-ups |
 
 ## Working on it locally
 

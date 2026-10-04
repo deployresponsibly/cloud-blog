@@ -12,3 +12,6 @@ crash.log
 
 # Local Terraform settings
 infra/backend.hcl
+
+# Personal notes
+TODO.md
