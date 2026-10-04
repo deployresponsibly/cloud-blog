@@ -15,6 +15,7 @@ interface Node {
 interface Zone {
   id: string;
   label: string;
+  blocked?: boolean;
 }
 interface Edge {
   from: string;
@@ -25,9 +26,11 @@ interface Edge {
 }
 interface Props {
   title: string;
+  // Figure number shown in the caption.
+  figure?: number;
   architecture: { caption?: string; nodes: Node[]; zones: Zone[]; edges: Edge[] };
 }
-const { title, architecture } = Astro.props;
+const { title, figure = 1, architecture } = Astro.props;
 const { nodes, zones, edges, caption } = architecture;
 
 // Grid geometry, in px.
@@ -141,8 +144,8 @@ const hasLinks = placed.some((n) => n.post);
         {
           zoneBoxes.map((zone) => (
             <g>
-              <rect class="arch-zone" x={zone.x} y={zone.y} width={zone.w} height={zone.h} />
-              <text class="arch-zone-label" x={zone.x + 12} y={zone.y + 20}>{zone.label}</text>
+              <rect class:list={['arch-zone', { blocked: zone.blocked }]} x={zone.x} y={zone.y} width={zone.w} height={zone.h} />
+              <text class:list={['arch-zone-label', { blocked: zone.blocked }]} x={zone.x + 12} y={zone.y + 20}>{zone.label}</text>
             </g>
           ))
         }
@@ -202,7 +205,7 @@ const hasLinks = placed.some((n) => n.post);
   {
     (caption || hasLinks) && (
       <figcaption class="caption">
-        <b>FIG. 1</b> {caption ?? `Architecture of ${title}.`}
+        <b>FIG. {figure}</b> {caption ?? `Architecture of ${title}.`}
         {hasLinks && ' Boxes marked with a ring open the post that covers them.'}
       </figcaption>
     )

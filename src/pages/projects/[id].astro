@@ -95,6 +95,7 @@ const lastUpdated = data.updated ?? posts.at(-1)?.data.date ?? data.started;
       <section class="stack">
         <h2 class="section-title">Architecture</h2>
         <ArchDiagram title={data.title} architecture={data.architecture} />
+        {data.detail && <ArchDiagram title={data.title} figure={2} architecture={data.detail} />}
       </section>
     )
   }

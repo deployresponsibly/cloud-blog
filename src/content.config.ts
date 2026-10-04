@@ -23,7 +23,16 @@ const architecture = z
         }),
       )
       .min(1),
-    zones: z.array(z.object({ id: z.string(), label: z.string() })).default([]),
+    zones: z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          // Draw the zone in red with a dotted border, to mark traffic that is blocked.
+          blocked: z.boolean().default(false),
+        }),
+      )
+      .default([]),
     edges: z
       .array(
         z.object({
@@ -71,6 +80,8 @@ const projects = defineCollection({
     repo: z.string().url().optional(),
     // The architecture diagram, drawn by the site (see README).
     architecture: architecture.optional(),
+    // A second, zoomed-in diagram shown below the architecture, drawn the same way.
+    detail: architecture.optional(),
     // Or: a ready-made image in /public, e.g. '/diagrams/my-diagram.svg'. Used when there is no `architecture`.
     diagram: z.string().optional(),
     diagramCaption: z.string().optional(),
