@@ -1154,10 +1154,18 @@ a.row-project {
   stroke-width: 1.5;
   stroke-dasharray: 6 5;
 }
+.arch-zone.blocked {
+  stroke: var(--milestone);
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
 .arch-zone-label {
   fill: var(--soft);
   font-size: 12px;
   letter-spacing: 0.08em;
+}
+.arch-zone-label.blocked {
+  fill: var(--milestone);
 }
 .arch-edge {
   fill: none;
