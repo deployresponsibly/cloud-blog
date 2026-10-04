@@ -24,7 +24,7 @@ The plan bundles CloudFront, a WAF web ACL, DDoS protection, a TLS certificate a
 
 ## What you keep
 
-The CDN itself, caching, fast invalidations, DDoS protection and a WAF with managed rules and rate limiting are all there. So are Origin Access Control, a free TLS certificate, HTTP/2, HTTP/3, IPv6 and CloudFront Functions, which the [previous part](/posts/hosting-on-s3-and-cloudfront/) leaned on. For a static blog, that's the whole job. The plan won't let you skip the WAF, and I'm struggling to be upset about being forced into free security.
+The CDN itself, caching, fast invalidations, DDoS protection and a WAF with managed rules and rate limiting are all there. So are Origin Access Control, a free TLS certificate, HTTP/2, HTTP/3, IPv6 and CloudFront Functions, which the [previous part](/posts/hosting-on-s3-and-cloudfront/) leaned on. For a static blog, that's the whole job. The plan won't let you skip the WAF, and I'm not particularly upset about being forced into free security.
 
 ## What this settled
 
