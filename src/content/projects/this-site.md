@@ -3,7 +3,7 @@ title: This site
 question: Can a blog be its own first cloud project?
 summary: How this blog is built, hosted and deployed on AWS, with the infrastructure code in the same repository.
 status: in-progress
-started: 2026-10-03
+started: 2026-10-02
 updated: 2026-10-04
 stack: [Astro, Terraform, AWS, S3, CloudFront, WAF, Route 53, GitHub Actions, CodeBuild]
 repo: https://github.com/deployresponsibly/cloud-blog
