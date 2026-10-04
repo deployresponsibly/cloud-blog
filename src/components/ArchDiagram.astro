@@ -1,0 +1,210 @@
+---
+// Draws a project's architecture from the `architecture` block in its frontmatter:
+// boxes placed on a col/row grid, dashed zones around groups of boxes, and arrows between them.
+import { href } from '../lib/content';
+
+interface Node {
+  id: string;
+  label: string;
+  col: number;
+  row: number;
+  zone?: string;
+  accent?: boolean;
+  post?: { id: string };
+}
+interface Zone {
+  id: string;
+  label: string;
+}
+interface Edge {
+  from: string;
+  to: string;
+  label?: string;
+  dashed?: boolean;
+  both?: boolean;
+}
+interface Props {
+  title: string;
+  architecture: { caption?: string; nodes: Node[]; zones: Zone[]; edges: Edge[] };
+}
+const { title, architecture } = Astro.props;
+const { nodes, zones, edges, caption } = architecture;
+
+// Grid geometry, in px.
+const W = 152; // box width
+const H = 64; // box height
+const MIN_GAP_X = 76;
+const GAP_Y = 76;
+const PAD_X = 24;
+const PAD_TOP = 40;
+const PAD_BOTTOM = 24;
+const ZONE_SIDE = 16;
+const ZONE_TOP = 32;
+const ZONE_BOTTOM = 14;
+
+// Edge labels sit in the gap between boxes, so widen the gap until the longest horizontal label fits
+// (12px text, estimated at 7px a character) with some air, plus any zone borders the arrow crosses.
+const LABEL_CHAR_W = 7;
+const LABEL_PAD = 24;
+const nodeById = new Map(nodes.map((n) => [n.id, n]));
+const labelGap = edges.map((edge) => {
+  const a = nodeById.get(edge.from);
+  const b = nodeById.get(edge.to);
+  if (!edge.label || !a || !b || a.row !== b.row) return 0;
+  const crossing = a.zone !== b.zone;
+  const borders = crossing ? (a.zone ? ZONE_SIDE : 0) + (b.zone ? ZONE_SIDE : 0) : 0;
+  return edge.label.length * LABEL_CHAR_W + LABEL_PAD + borders;
+});
+const GAP_X = Math.ceil(Math.max(MIN_GAP_X, ...labelGap));
+
+const place = (n: Node) => {
+  const x = PAD_X + (n.col - 1) * (W + GAP_X);
+  const y = PAD_TOP + (n.row - 1) * (H + GAP_Y);
+  return { ...n, x, y, cx: x + W / 2, cy: y + H / 2, right: x + W, bottom: y + H };
+};
+const placed = nodes.map(place);
+const byId = new Map(placed.map((n) => [n.id, n]));
+
+const width = Math.max(...placed.map((n) => n.right)) + PAD_X;
+const height = Math.max(...placed.map((n) => n.bottom)) + PAD_BOTTOM;
+
+const zoneBoxes = zones
+  .map((zone) => {
+    const members = placed.filter((n) => n.zone === zone.id);
+    if (members.length === 0) return undefined;
+    const x = Math.min(...members.map((n) => n.x)) - ZONE_SIDE;
+    const y = Math.min(...members.map((n) => n.y)) - ZONE_TOP;
+    return {
+      ...zone,
+      x,
+      y,
+      w: Math.max(...members.map((n) => n.right)) + ZONE_SIDE - x,
+      h: Math.max(...members.map((n) => n.bottom)) + ZONE_BOTTOM - y,
+    };
+  })
+  .filter((zone) => zone !== undefined);
+
+// Arrows run horizontally or vertically. Boxes in the same row or column get a straight line;
+// anything else leaves the side of the source, turns in the gap before the target, and enters its side.
+const routes = edges.map((edge) => {
+  const a = byId.get(edge.from)!;
+  const b = byId.get(edge.to)!;
+  let d: string;
+  let at: { x: number; y: number; anchor: string };
+
+  if (a.col === b.col) {
+    const down = b.row > a.row;
+    const y1 = down ? a.bottom : a.y;
+    const y2 = down ? b.y : b.bottom;
+    d = `M${a.cx} ${y1} V${y2}`;
+    // Center the label in the clear part of the gap, between any zone borders the arrow crosses.
+    const crossing = a.zone !== b.zone;
+    const clearStart = y1 + (crossing && a.zone ? (down ? ZONE_BOTTOM : -ZONE_TOP) : 0);
+    const clearEnd = y2 - (crossing && b.zone ? (down ? ZONE_TOP : -ZONE_BOTTOM) : 0);
+    at = { x: a.cx + 10, y: (clearStart + clearEnd) / 2 + 4, anchor: 'start' };
+  } else {
+    const rightward = b.col > a.col;
+    const x1 = rightward ? a.right : a.x;
+    const x2 = rightward ? b.x : b.right;
+    if (a.row === b.row) {
+      d = `M${x1} ${a.cy} H${x2}`;
+      // Center the label in the clear part of the gap, keeping it off any zone border the arrow crosses.
+      const crossing = a.zone !== b.zone;
+      const dir = rightward ? 1 : -1;
+      const clearStart = x1 + (crossing && a.zone ? ZONE_SIDE * dir : 0);
+      const clearEnd = x2 - (crossing && b.zone ? ZONE_SIDE * dir : 0);
+      at = { x: (clearStart + clearEnd) / 2, y: a.cy - 8, anchor: 'middle' };
+    } else {
+      const turn = rightward ? b.x - GAP_X / 2 : b.right + GAP_X / 2;
+      d = `M${x1} ${a.cy} H${turn} V${b.cy} H${x2}`;
+      at = { x: turn + 8, y: (a.cy + b.cy) / 2 + 4, anchor: 'start' };
+    }
+  }
+  return { ...edge, d, at, fromLabel: a.label, toLabel: b.label };
+});
+
+const hasLinks = placed.some((n) => n.post);
+---
+
+<figure class="panel figure-panel arch" style="margin: 0">
+  <div class="figure-scroll">
+    <div class="arch-host" style={`width: ${width}px; height: ${height}px`}>
+      <svg class="arch-lines" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        <defs>
+          <marker id="arch-head" orient="auto-start-reverse" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4">
+            <path d="M0 0 L10 4 L0 8 Z" class="arch-head"></path>
+          </marker>
+          <marker id="arch-head-dashed" orient="auto-start-reverse" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4">
+            <path d="M0 0 L10 4 L0 8 Z" class="arch-head dashed"></path>
+          </marker>
+        </defs>
+        {
+          zoneBoxes.map((zone) => (
+            <g>
+              <rect class="arch-zone" x={zone.x} y={zone.y} width={zone.w} height={zone.h} />
+              <text class="arch-zone-label" x={zone.x + 12} y={zone.y + 20}>{zone.label}</text>
+            </g>
+          ))
+        }
+        {
+          routes.map((route) => (
+            <g>
+              <path
+                class:list={['arch-edge', { dashed: route.dashed }]}
+                d={route.d}
+                marker-end={`url(#${route.dashed ? 'arch-head-dashed' : 'arch-head'})`}
+                marker-start={route.both ? `url(#${route.dashed ? 'arch-head-dashed' : 'arch-head'})` : undefined}
+              />
+              {route.label && (
+                <text class="arch-edge-label" x={route.at.x} y={route.at.y} text-anchor={route.at.anchor}>
+                  {route.label}
+                </text>
+              )}
+            </g>
+          ))
+        }
+      </svg>
+      {
+        placed.map((node) =>
+          node.post ? (
+            <a
+              class:list={['arch-node', 'linked', { accent: node.accent }]}
+              style={`left: ${node.x}px; top: ${node.y}px; width: ${W}px; height: ${H}px`}
+              href={href(`/posts/${node.post.id}/`)}
+            >
+              <span class="mk post small" aria-hidden="true" />
+              <span>{node.label}</span>
+            </a>
+          ) : (
+            <div
+              class:list={['arch-node', { accent: node.accent }]}
+              style={`left: ${node.x}px; top: ${node.y}px; width: ${W}px; height: ${H}px`}
+            >
+              <span>{node.label}</span>
+            </div>
+          ),
+        )
+      }
+    </div>
+  </div>
+
+  <ul class="sr-only">
+    {
+      routes.map((route) => (
+        <li>
+          {route.fromLabel} {route.both ? 'connects both ways with' : 'connects to'} {route.toLabel}
+          {route.label ? ` (${route.label})` : ''}
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    (caption || hasLinks) && (
+      <figcaption class="caption">
+        <b>FIG. 1</b> {caption ?? `Architecture of ${title}.`}
+        {hasLinks && ' Boxes marked with a ring open the post that covers them.'}
+      </figcaption>
+    )
+  }
+</figure>

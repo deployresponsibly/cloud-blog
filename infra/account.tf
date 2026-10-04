@@ -1,0 +1,8 @@
+# Account-wide backstop: no bucket in this account can be made public, even if a
+# bucket-level block is forgotten or removed later.
+resource "aws_s3_account_public_access_block" "this" {
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}

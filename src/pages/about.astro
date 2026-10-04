@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import { Content as Bio } from '../about.md';
+import { site } from '../site';
+import { getProjects, href } from '../lib/content';
+
+const { about, links } = site;
+const handle = site.name.toLowerCase().replace(/\s+/g, '-');
+const infraProject = (await getProjects()).find((project) => project.id === site.infra.projectId);
+const elsewhere = [
+  links.github && { label: 'GitHub', url: links.github },
+  links.linkedin && { label: 'LinkedIn', url: links.linkedin },
+  { label: 'RSS feed', url: href('/rss.xml') },
+  links.email && { label: links.email, url: `mailto:${links.email}` },
+].filter((link): link is { label: string; url: string } => Boolean(link));
+---
+
+<Base title="About" section="about" description={about.tagline}>
+  <section class="stack">
+    <h1 class="display"><span class="lead">About</span> {site.name}</h1>
+    <p class="lede">{about.tagline}</p>
+  </section>
+
+  <section class="split" style="gap: 32px 48px">
+    <div class="panel bio prose">
+      <Bio />
+    </div>
+    <div class="about-side">
+      {
+        about.photo ? (
+          <img class="photo" src={href(about.photo)} alt={`Portrait of ${site.name}`} />
+        ) : (
+          <div class="panel terminal" role="img" aria-label={`whoami: ${handle}. status: ${about.status}`}>
+            <div class="panel-head label">Terminal</div>
+            <pre aria-hidden="true"><span class="prompt">$</span> whoami
+<span class="out">{handle}</span>
+<span class="prompt">$</span> status
+<span class="out">{about.status}</span>
+<span class="prompt">$</span> <span class="cursor">&#9608;</span></pre>
+          </div>
+        )
+      }
+      <div class="panel">
+        <div class="panel-head label">At a glance</div>
+        <dl class="kv" style="margin: 0">
+          <div><dt>Role</dt><dd>{about.role}</dd></div>
+          <div><dt>Based in</dt><dd>{about.location}</dd></div>
+          <div><dt>Focus</dt><dd>{about.focus}</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2 class="section-title">Elsewhere</h2>
+    <div class="link-grid label">
+      {
+        elsewhere.map((link) => (
+          <a href={link.url}>
+            <span>{link.label}</span>
+            <Arrow />
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="zone site-note">
+    <div class="zone-label">About this site</div>
+    <p set:html={about.siteNote} />
+    {
+      infraProject && (
+        <a class="arrow-link label" href={href(`/projects/${infraProject.id}/`)}>
+          <span>Read the infrastructure</span>
+          <Arrow />
+        </a>
+      )
+    }
+  </section>
+</Base>

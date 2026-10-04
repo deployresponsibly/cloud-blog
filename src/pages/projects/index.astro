@@ -1,0 +1,111 @@
+---
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import PostTree from '../../components/PostTree.astro';
+import { getPosts, getProjects, postsFor, formatMonthYear, href } from '../../lib/content';
+
+const [posts, projects] = await Promise.all([getPosts(), getProjects()]);
+const withPosts = projects.map((project) => ({ project, posts: postsFor(project, posts) }));
+const inProgress = withPosts.filter(({ project }) => project.data.status === 'in-progress');
+const complete = withPosts.filter(({ project }) => project.data.status === 'complete');
+---
+
+<Base title="Projects" section="projects" description="Projects, each built to answer a question.">
+  <section class="stack">
+    <h1 class="display" style="max-width: 16ch"><span class="lead">Projects,</span> each built to answer a question.</h1>
+  </section>
+
+  <section class="stack wide">
+    {projects.length === 0 && <p class="empty-note">No projects yet. Add one in src/content/projects.</p>}
+
+    {
+      inProgress.length > 0 && (
+        <div class="zone">
+          <div class="zone-label">In progress</div>
+          {inProgress.map(({ project, posts }) => (
+            <article class="card feature">
+              <div class="feature-main">
+                <div class="tags label">
+                  <span class="tag project">
+                    <span class="mk project" />
+                    Project
+                  </span>
+                  <span class="soft">Started {formatMonthYear(project.data.started)}</span>
+                </div>
+                <h2 class="card-title big">
+                  <a href={href(`/projects/${project.id}/`)}>{project.data.title}</a>
+                </h2>
+                <p>{project.data.question}</p>
+                {(project.data.stack.length > 0 || project.data.repo) && (
+                  <dl class="kv flush" style="margin: 8px 0 0">
+                    {project.data.stack.length > 0 && (
+                      <div>
+                        <dt>Stack</dt>
+                        <dd>{project.data.stack.join(', ')}</dd>
+                      </div>
+                    )}
+                    {project.data.repo && (
+                      <div>
+                        <dt>Source</dt>
+                        <dd>
+                          <a href={project.data.repo}>{project.data.repo.replace(/^https?:\/\//, '')}</a>
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
+              </div>
+              {(posts.length > 0 || project.data.planned.length > 0) && (
+                <div class="feature-side">
+                  <div class="label soft">{posts.length > 0 ? 'Posts so far' : 'Planned posts'}</div>
+                  <PostTree posts={posts} planned={project.data.planned} />
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )
+    }
+
+    {
+      complete.length > 0 && (
+        <div class="zone">
+          <div class="zone-label">Complete</div>
+          <div class="grid">
+            {complete.map(({ project, posts }) => (
+              <article class="card">
+                <div class="tags label">
+                  <span class="tag project">
+                    <span class="mk project" />
+                    Project
+                  </span>
+                  <span class="soft">{project.data.started.getUTCFullYear()}</span>
+                </div>
+                <h2 class="card-title">
+                  <a href={href(`/projects/${project.id}/`)}>{project.data.title}</a>
+                </h2>
+                <p>{project.data.summary}</p>
+                <dl class="kv flush" style="margin-bottom: 0">
+                  <div>
+                    <dt>Posts</dt>
+                    <dd class="count">{posts.length}</dd>
+                  </div>
+                  {project.data.stack.length > 0 && (
+                    <div>
+                      <dt>Stack</dt>
+                      <dd>{project.data.stack.join(', ')}</dd>
+                    </div>
+                  )}
+                  <a href={href(`/projects/${project.id}/`)}>
+                    <span>Open project</span>
+                    <Arrow />
+                  </a>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </section>
+</Base>

@@ -1,0 +1,132 @@
+---
+import Base from '../layouts/Base.astro';
+import Arrow from '../components/Arrow.astro';
+import PostTree from '../components/PostTree.astro';
+import { site } from '../site';
+import {
+  getPosts,
+  getProjects,
+  getMilestones,
+  postsFor,
+  groupByYear,
+  formatMonth,
+  formatDate,
+  href,
+  type Post,
+  type Project,
+  type Milestone,
+} from '../lib/content';
+
+const [posts, projects, milestones] = await Promise.all([getPosts(), getProjects(), getMilestones()]);
+
+type Entry =
+  | { kind: 'project'; date: Date; project: Project; posts: Post[] }
+  | { kind: 'post'; date: Date; post: Post }
+  | { kind: 'milestone'; date: Date; milestone: Milestone };
+
+// The timeline mixes projects (with their posts hanging off them), standalone posts and milestones.
+const entries: Entry[] = [
+  ...projects.map((project) => ({
+    kind: 'project' as const,
+    date: project.data.started,
+    project,
+    posts: postsFor(project, posts),
+  })),
+  ...posts.filter((post) => !post.data.project).map((post) => ({ kind: 'post' as const, date: post.data.date, post })),
+  ...milestones.map((milestone) => ({ kind: 'milestone' as const, date: milestone.data.date, milestone })),
+].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+const years = groupByYear(entries, (entry) => entry.date);
+const infraProject = projects.find((project) => project.id === site.infra.projectId);
+const lastDeploy = formatDate(new Date());
+---
+
+<Base section="timeline">
+  <section class="hero">
+    <div class="hero-text">
+      <h1 class="display"><span class="lead">{site.headline.lead}</span> {site.headline.rest}</h1>
+      <p class="lede">{site.intro}</p>
+    </div>
+    <div class="panel hero-panel">
+      <div class="panel-head label">This site is the first project</div>
+      <dl class="kv" style="margin: 0">
+        <div><dt>Hosted on</dt><dd>{site.infra.hostedOn}</dd></div>
+        <div><dt>Deployed with</dt><dd>{site.infra.deployedWith}</dd></div>
+        <div><dt>Last deploy</dt><dd>{lastDeploy}</dd></div>
+        {
+          infraProject && (
+            <a href={href(`/projects/${infraProject.id}/`)}>
+              <span>Read the infrastructure</span>
+              <Arrow />
+            </a>
+          )
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="stack wide" aria-labelledby="timeline-title">
+    <div class="title-row">
+      <h2 class="section-title" id="timeline-title">Timeline</h2>
+      <ul class="legend label" role="list" aria-label="Legend">
+        <li><span class="mk project"></span>Project</li>
+        <li><span class="mk post"></span>Post</li>
+        <li><span class="mk milestone"></span>Milestone</li>
+      </ul>
+    </div>
+
+    {years.length === 0 && <p class="empty-note">Nothing here yet. Add a project, post or milestone in src/content.</p>}
+
+    {
+      years.map(([year, items]) => (
+        <div class="zone spined">
+          <div class="zone-label">{year}</div>
+          <ol class="spine" role="list">
+            {items.map((entry) => (
+              <li>
+                <div class="node">
+                  <span class:list={['mk', entry.kind]} />
+                </div>
+                {entry.kind === 'project' && (
+                  <article class="card">
+                    <div class="tags label">
+                      <span class="tag project">Project</span>
+                      <span class="soft">{formatMonth(entry.date)}</span>
+                    </div>
+                    <h3 class="card-title">
+                      <a href={href(`/projects/${entry.project.id}/`)}>{entry.project.data.title}</a>
+                    </h3>
+                    <p>{entry.project.data.summary}</p>
+                    <PostTree posts={entry.posts} planned={entry.project.data.planned} />
+                  </article>
+                )}
+                {entry.kind === 'post' && (
+                  <article class="card">
+                    <div class="tags label">
+                      <span class="tag post">Post</span>
+                      <span class="soft">{formatMonth(entry.date)}</span>
+                    </div>
+                    <h3 class="card-title">
+                      <a href={href(`/posts/${entry.post.id}/`)}>{entry.post.data.title}</a>
+                    </h3>
+                    <p>{entry.post.data.summary}</p>
+                  </article>
+                )}
+                {entry.kind === 'milestone' && (
+                  <article class="card">
+                    <div class="tags label">
+                      <span class="tag">Milestone</span>
+                      <span class="soft">{formatMonth(entry.date)}</span>
+                    </div>
+                    <h3 class="card-title">{entry.milestone.data.title}</h3>
+                    {entry.milestone.data.summary && <p>{entry.milestone.data.summary}</p>}
+                  </article>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))
+    }
+  </section>
+</Base>

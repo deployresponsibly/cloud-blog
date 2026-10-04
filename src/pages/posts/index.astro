@@ -1,0 +1,82 @@
+---
+import { getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, groupByYear, formatDay, postLabel, href } from '../../lib/content';
+
+const posts = await getPosts();
+const rows = await Promise.all(
+  posts.map(async (post) => ({
+    post,
+    project: post.data.project ? await getEntry(post.data.project) : undefined,
+  })),
+);
+const years = groupByYear(rows, (row) => row.post.data.date);
+const topics = [...new Set(posts.flatMap((post) => post.data.topics))].sort();
+---
+
+<Base title="Posts" section="posts" description="All posts, newest first.">
+  <section class="stack">
+    <h1 class="display"><span class="lead">Posts,</span> newest first.</h1>
+    {
+      topics.length > 0 && (
+        <div class="chips" role="group" aria-label="Filter by topic">
+          <button type="button" class="chip" data-topic="" aria-pressed="true">All</button>
+          {topics.map((topic) => (
+            <button type="button" class="chip" data-topic={topic} aria-pressed="false">{topic}</button>
+          ))}
+        </div>
+      )
+    }
+  </section>
+
+  <section class="stack wide">
+    {posts.length === 0 && <p class="empty-note">No posts yet. Add one in src/content/posts.</p>}
+    {
+      years.map(([year, items]) => (
+        <div class="zone" data-year>
+          <div class="zone-label">{year}</div>
+          <ol class="panel rows" role="list">
+            {items.map(({ post, project }) => (
+              <li data-topics={post.data.topics.join('|')}>
+                <span class="row-date label">{formatDay(post.data.date)}</span>
+                <span class="row-title">
+                  <span class="mk post small" />
+                  <a href={href(`/posts/${post.id}/`)}>{postLabel(post)}</a>
+                </span>
+                {project ? (
+                  <a class="row-project" href={href(`/projects/${project.id}/`)}>
+                    <span class="mk project small" />
+                    <span>{project.data.title}</span>
+                  </a>
+                ) : (
+                  <span class="row-project soft">Standalone</span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))
+    }
+  </section>
+</Base>
+
+<script>
+  // Topic filter: show only rows tagged with the chosen topic, and hide years left empty.
+  const chips = document.querySelectorAll<HTMLButtonElement>('.chip');
+  const rows = document.querySelectorAll<HTMLElement>('.rows > li');
+  const years = document.querySelectorAll<HTMLElement>('[data-year]');
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const topic = chip.dataset.topic ?? '';
+      chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+      rows.forEach((row) => {
+        const tagged = (row.dataset.topics ?? '').split('|');
+        row.hidden = topic !== '' && !tagged.includes(topic);
+      });
+      years.forEach((year) => {
+        year.hidden = year.querySelectorAll('.rows > li:not([hidden])').length === 0;
+      });
+    });
+  });
+</script>

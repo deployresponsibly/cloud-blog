@@ -1,0 +1,77 @@
+---
+import '../styles/global.css';
+import { site } from '../site';
+import { href } from '../lib/content';
+
+interface Props {
+  title?: string;
+  description?: string;
+  section?: 'timeline' | 'projects' | 'posts' | 'about';
+  tight?: boolean;
+}
+const { title, description = site.description, section, tight = false } = Astro.props;
+const pageTitle = title ? `${title} | ${site.name}` : site.name;
+
+const nav = [
+  { id: 'timeline', label: 'Timeline', path: '/' },
+  { id: 'projects', label: 'Projects', path: '/projects/' },
+  { id: 'posts', label: 'Posts', path: '/posts/' },
+  { id: 'about', label: 'About', path: '/about/' },
+];
+const { github, email } = site.links;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#3b4252" />
+    <link rel="icon" type="image/svg+xml" href={href('/favicon.svg')} />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href={href('/rss.xml')} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <div class="wrap">
+      <header class="site-header">
+        <a class="nameplate" href={href('/')}>{site.name}</a>
+        <nav class="nav" aria-label="Main">
+          <ul role="list">
+            {
+              nav.map((item) => (
+                <li>
+                  <a href={href(item.path)} aria-current={item.id === section ? 'page' : undefined}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </header>
+
+      <main id="content" class:list={[{ tight }]}>
+        <slot />
+      </main>
+
+      <footer class="site-footer label">
+        <div>{site.name}</div>
+        <ul role="list">
+          <li><a href={href('/rss.xml')}>RSS</a></li>
+          {github && <li><a href={github}>GitHub</a></li>}
+          {email && <li><a href={`mailto:${email}`}>Contact</a></li>}
+        </ul>
+      </footer>
+    </div>
+  </body>
+</html>

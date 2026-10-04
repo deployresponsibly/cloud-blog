@@ -1,0 +1,35 @@
+---
+// A project's posts drawn as a small tree, with planned posts dashed.
+import { href, postLabel, type Post } from '../lib/content';
+
+interface Props {
+  posts: Post[];
+  planned?: string[];
+  currentId?: string;
+}
+const { posts, planned = [], currentId } = Astro.props;
+---
+
+{
+  (posts.length > 0 || planned.length > 0) && (
+    <ul class="tree" role="list">
+      {posts.map((post) => (
+        <li>
+          <span class:list={['mk', 'post', 'small', { current: post.id === currentId }]} />
+          {post.id === currentId ? (
+            <span class="current" aria-current="page">{postLabel(post)}</span>
+          ) : (
+            <a href={href(`/posts/${post.id}/`)}>{postLabel(post)}</a>
+          )}
+        </li>
+      ))}
+      {planned.map((title, i) => (
+        <li class="planned">
+          <span class="mk post small planned" />
+          <span>Part {posts.length + i + 1}: {title}</span>
+          {i === 0 && <span class="next">Next</span>}
+        </li>
+      ))}
+    </ul>
+  )
+}

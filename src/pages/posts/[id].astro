@@ -1,0 +1,99 @@
+---
+import { getEntry, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import PostTree from '../../components/PostTree.astro';
+import { getPosts, postsFor, postLabel, formatDate, readTime, href, type Post } from '../../lib/content';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const { data } = post;
+const { Content } = await render(post);
+
+const project = data.project ? await getEntry(data.project) : undefined;
+const series = project ? postsFor(project, await getPosts()) : [];
+const position = series.findIndex((p) => p.id === post.id);
+const previous = position > 0 ? series[position - 1] : undefined;
+const next = position >= 0 ? series[position + 1] : undefined;
+const plannedNext = !next && position === series.length - 1 ? project?.data.planned[0] : undefined;
+---
+
+<Base title={data.title} section="posts" description={data.summary} tight>
+  <section class="stack close">
+    {
+      project ? (
+        <a class="arrow-link label" href={href(`/projects/${project.id}/`)}>
+          <Arrow back />
+          <span>{project.data.title}</span>
+        </a>
+      ) : (
+        <a class="arrow-link label" href={href('/posts/')}>
+          <Arrow back />
+          <span>All posts</span>
+        </a>
+      )
+    }
+    <div class="tags label meta-line">
+      <span class="tag post">
+        <span class="mk post"></span>
+        Post
+      </span>
+      <span class="soft">{formatDate(data.date)}</span>
+      <span class="soft">{readTime(post.body)} min read</span>
+    </div>
+    <h1 class="display smaller" style="max-width: 22ch">
+      {data.part && <span class="lead post">Part {data.part}:</span>}{' '}
+      {data.title}
+    </h1>
+    <p class="question">{data.summary}</p>
+  </section>
+
+  <section class="split" style="gap: 32px 40px">
+    <article class="panel article prose">
+      <Content />
+    </article>
+    {
+      project && (
+        <aside class="panel series" aria-label="In this project">
+          <div class="panel-head label">In this project</div>
+          <div class="series-body">
+            <a href={href(`/projects/${project.id}/`)}>{project.data.title}</a>
+            <PostTree posts={series} planned={project.data.planned} currentId={post.id} />
+          </div>
+        </aside>
+      )
+    }
+  </section>
+
+  {
+    (previous || next || plannedNext) && (
+      <nav class="pager" aria-label="Series">
+        {previous ? (
+          <a href={href(`/posts/${previous.id}/`)}>
+            <span class="label where">Previous</span>
+            <span class="what">{postLabel(previous)}</span>
+          </a>
+        ) : null}
+        {next && (
+          <a class="to-next" href={href(`/posts/${next.id}/`)}>
+            <span class="label where">Next</span>
+            <span class="what">{postLabel(next)}</span>
+          </a>
+        )}
+        {plannedNext && (
+          <div class="to-next planned">
+            <span class="label where">Next, not yet published</span>
+            <span class="what">Part {series.length + 1}: {plannedNext}</span>
+          </div>
+        )}
+      </nav>
+    )
+  }
+</Base>

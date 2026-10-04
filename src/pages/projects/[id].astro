@@ -1,0 +1,182 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Arrow from '../../components/Arrow.astro';
+import ArchDiagram from '../../components/ArchDiagram.astro';
+import {
+  getPosts,
+  getProjects,
+  postsFor,
+  formatDate,
+  formatMonthYear,
+  href,
+  type Project,
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { id: project.id }, props: { project } }));
+}
+
+interface Props {
+  project: Project;
+}
+const { project } = Astro.props;
+const { data } = project;
+const posts = postsFor(project, await getPosts());
+const { Content } = await render(project);
+const hasOverview = (project.body ?? '').trim().length > 0;
+const hasSide = data.decisions.length > 0;
+const lastUpdated = data.updated ?? posts.at(-1)?.data.date ?? data.started;
+---
+
+<Base title={data.title} section="projects" description={data.summary}>
+  <section class="stack close">
+    <a class="arrow-link label" href={href('/projects/')}>
+      <Arrow back />
+      <span>All projects</span>
+    </a>
+    <div class="tags label meta-line">
+      <span class="tag project">
+        <span class="mk project"></span>
+        Project
+      </span>
+      <span>
+        <span class:list={['status', { complete: data.status === 'complete' }]}>
+          {data.status === 'complete' ? 'Complete' : 'In progress'}
+        </span>
+      </span>
+    </div>
+    <h1 class="display smaller frost">{data.title}</h1>
+    <p class="question">{data.question}</p>
+    <dl class="meta-grid" style="margin-bottom: 0">
+      <div>
+        <dt>Started</dt>
+        <dd>{formatMonthYear(data.started)}</dd>
+      </div>
+      {
+        data.stack.length > 0 && (
+          <div>
+            <dt>Stack</dt>
+            <dd>{data.stack.join(', ')}</dd>
+          </div>
+        )
+      }
+      {
+        data.repo && (
+          <div>
+            <dt>Source</dt>
+            <dd>
+              <a href={data.repo}>{data.repo.replace(/^https?:\/\//, '')}</a>
+            </dd>
+          </div>
+        )
+      }
+      <div>
+        <dt>Last updated</dt>
+        <dd>{formatDate(lastUpdated)}</dd>
+      </div>
+    </dl>
+  </section>
+
+  {
+    hasOverview && (
+      <section class="stack">
+        <h2 class="section-title">Overview</h2>
+        <div class="panel pad prose">
+          <Content />
+        </div>
+      </section>
+    )
+  }
+
+  {
+    data.architecture && (
+      <section class="stack">
+        <h2 class="section-title">Architecture</h2>
+        <ArchDiagram title={data.title} architecture={data.architecture} />
+      </section>
+    )
+  }
+
+  {
+    !data.architecture && data.diagram && (
+      <section class="stack">
+        <h2 class="section-title">Architecture</h2>
+        <figure class="panel figure-panel" style="margin: 0">
+          <div class="figure-scroll">
+            <img src={href(data.diagram)} alt={data.diagramCaption ?? `Architecture diagram for ${data.title}`} />
+          </div>
+          {data.diagramCaption && (
+            <figcaption class="caption">
+              <b>FIG. 1</b> {data.diagramCaption}
+            </figcaption>
+          )}
+        </figure>
+      </section>
+    )
+  }
+
+  <section class="split">
+    <div class="split-main stack">
+      <h2 class="section-title">Posts</h2>
+      {posts.length === 0 && data.planned.length === 0 && <p class="empty-note">No posts yet.</p>}
+      <ol class="spine" role="list">
+        {
+          posts.map((post) => (
+            <li>
+              <div class="node">
+                <span class="mk post" />
+              </div>
+              <article class="card">
+                <div class="tags label">
+                  {post.data.part && <span class="tag post">Part {post.data.part}</span>}
+                  <span class="soft">{formatDate(post.data.date)}</span>
+                </div>
+                <h3 class="card-title small">
+                  <a href={href(`/posts/${post.id}/`)}>{post.data.title}</a>
+                </h3>
+                <p>{post.data.summary}</p>
+              </article>
+            </li>
+          ))
+        }
+        {
+          data.planned.map((title, i) => (
+            <li>
+              <div class="node">
+                <span class="mk post planned" />
+              </div>
+              <article class="card planned">
+                <div class="tags label">
+                  <span class="tag post">Part {posts.length + i + 1}</span>
+                  <span>{i === 0 ? 'Next' : 'Planned'}</span>
+                </div>
+                <h3 class="card-title small">{title}</h3>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    {
+      hasSide && (
+        <div class="split-side stack">
+          <h2 class="section-title">Decisions</h2>
+          <div class="panel">
+            <div class="panel-head label">What I chose, and why</div>
+            <ol class="decisions" role="list">
+              {data.decisions.map((decision, i) => (
+                <li>
+                  <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                  <span>{decision}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )
+    }
+  </section>
+</Base>
