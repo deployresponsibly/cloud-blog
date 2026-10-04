@@ -15,8 +15,8 @@ architecture:
     - { id: repo, label: GitHub repo, col: 1, row: 1 }
     - { id: build, label: Astro build, col: 2, row: 1, post: choosing-the-stack }
     - { id: deploy, label: CodeBuild runner, col: 3, row: 1, zone: aws }
-    - { id: storage, label: S3 bucket, col: 4, row: 1, zone: aws }
-    - { id: cdn, label: CloudFront + WAF, col: 4, row: 2, zone: aws }
+    - { id: storage, label: S3 bucket, col: 4, row: 1, zone: aws, post: hosting-on-s3-and-cloudfront }
+    - { id: cdn, label: CloudFront + WAF, col: 4, row: 2, zone: aws, post: hosting-on-s3-and-cloudfront }
     - { id: dns, label: Route 53, col: 3, row: 2, zone: aws }
     - { id: reader, label: Reader, col: 4, row: 3, accent: true }
   edges:
@@ -35,7 +35,6 @@ decisions:
   - Split the pipeline in two. GitHub builds the site with no AWS access; a CodeBuild-hosted runner deploys the finished artifact using a role scoped to one bucket and one distribution.
   - Pinned every GitHub Action to a commit SHA, and made GitHub reject any that are not.
 planned:
-  - Hosting on S3 and CloudFront
   - Living inside the CloudFront Free plan
   - The deploy pipeline
   - What broke along the way
