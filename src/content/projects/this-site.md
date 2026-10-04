@@ -17,8 +17,8 @@ architecture:
     - { id: deploy, label: CodeBuild runner, col: 3, row: 1, zone: aws }
     - { id: storage, label: S3 bucket, col: 4, row: 1, zone: aws }
     - { id: cdn, label: CloudFront + WAF, col: 4, row: 2, zone: aws }
-    - { id: reader, label: Reader, col: 3, row: 2, accent: true }
-    - { id: dns, label: Route 53, col: 2, row: 2 }
+    - { id: dns, label: Route 53, col: 3, row: 2, zone: aws }
+    - { id: reader, label: Reader, col: 4, row: 3, accent: true }
   edges:
     - { from: repo, to: build, label: push to main }
     - { from: build, to: deploy, label: artifact }
