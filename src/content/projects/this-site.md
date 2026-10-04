@@ -35,7 +35,6 @@ decisions:
   - Split the pipeline in two. GitHub builds the site with no AWS access; a CodeBuild-hosted runner deploys the finished artifact using a role scoped to one bucket and one distribution.
   - Pinned every GitHub Action to a commit SHA, and made GitHub reject any that are not.
 planned:
-  - Living inside the CloudFront Free plan
   - The deploy pipeline
   - What broke along the way
 ---
