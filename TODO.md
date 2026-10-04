@@ -1,13 +1,13 @@
 # TODO
 
-Security follow-ups that need GitHub features this private repo can't use yet.
+Security follow-ups.
 
-- [ ] **Branch protection on `main`**: require the `CI` checks and block direct
-      pushes. Needs GitHub Pro, or make the repo public. Deploys run on every
-      push to `main`, so this is the main guard on production.
-- [ ] **Fork PR approval**: once the repo is public, set Settings > Actions >
-      General > "Require approval for all external contributors". GitHub rejects
-      this setting on private repos. The CodeBuild runner is only reachable from
-      the `Deploy` workflow, but this closes the fork-PR path.
+- [x] **Branch protection on `main`**: requires the `CI` checks and a pull
+      request, and blocks direct pushes and force pushes, including for admins.
+      Deploys run on every push to `main`, so this is the main guard on
+      production.
+- [x] **Fork PR approval**: "Require approval for all external contributors" is
+      set under Settings > Actions > General. The CodeBuild runner is only
+      reachable from the `Deploy` workflow, but this closes the fork-PR path.
 - [ ] Limit the AWS Connector for GitHub app to this repository only
       (GitHub > Settings > Applications > Installed GitHub Apps).
