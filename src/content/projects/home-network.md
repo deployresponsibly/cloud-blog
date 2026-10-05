@@ -53,3 +53,14 @@ planned:
   - VqLAN, and when layer 2 ACLs beat a VLAN
   - What broke along the way
 ---
+
+I'm using Firewalla gear (a Gold Pro and an AP7) to split my home network into isolated segments, in layers: a VLAN per SSID, VqLANs inside a VLAN, and device-level isolation on top. The goal is real isolation without enterprise hardware, and without losing a weekend to switch configs or fixing something I broke while editing them.
+
+Why: IoT devices and guests are the least trustworthy things on my network, and IoT devices are, generally, inherently insecure. I don't want either one to have a path to the machines I care about, like my NAS.
+
+## Further reading
+
+- [Gamers Nexus on LG smart TVs](https://youtu.be/6IFVTcM28KA?t=822): "we own the glass", and voice-to-text [saving transcripts to memory](https://youtu.be/6IFVTcM28KA?t=2780) at 46:20.
+- [Know who's in your LG household](https://tech.yahoo.com/cybersecurity/articles/know-whos-lg-household-own-134138391.html) (Yahoo Tech): the "we own the glass" pitch to advertisers, and LG's response.
+- [LG smart TV audio logging](https://urbanwired.com/lg-smart-tv-audio-logging/) (Urban Wired): the TV cataloguing devices on your network.
+- [LG smart TVs record with the screen off and scan your whole home network](https://tech-ish.com/2026/09/09/lg-smart-tvs-record-with-the-screen-off-and-scan-your-whole-home-network/) (Tech-ish): the webOS exploit and the standby behavior.
