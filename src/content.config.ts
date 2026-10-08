@@ -105,6 +105,8 @@ const posts = defineCollection({
     // Position in the project's series: 1, 2, 3...
     part: z.number().int().positive().optional(),
     topics: z.array(z.string()).default([]),
+    // A diagram shown above the post, drawn the same way as a project's architecture.
+    architecture: architecture.optional(),
     draft: z.boolean().default(false),
   }),
 });
