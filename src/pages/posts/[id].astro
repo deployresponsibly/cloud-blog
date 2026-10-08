@@ -3,6 +3,7 @@ import { getEntry, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Arrow from '../../components/Arrow.astro';
 import PostTree from '../../components/PostTree.astro';
+import ArchDiagram from '../../components/ArchDiagram.astro';
 import { getPosts, postsFor, postLabel, formatDate, readTime, href, type Post } from '../../lib/content';
 
 export async function getStaticPaths() {
@@ -54,6 +55,14 @@ const plannedNext = !next && position === series.length - 1 ? project?.data.plan
     </h1>
     <p class="question">{data.summary}</p>
   </section>
+
+  {
+    data.architecture && (
+      <section class="stack">
+        <ArchDiagram title={data.title} architecture={data.architecture} />
+      </section>
+    )
+  }
 
   <section class="split" style="gap: 32px 40px">
     <article class="panel article prose">

@@ -38,7 +38,6 @@ decisions:
   - GitHub builds with no AWS access, a CodeBuild runner deploys
   - Every GitHub Action pinned to a commit SHA
 planned:
-  - The deploy pipeline
   - What broke along the way
 ---
 
