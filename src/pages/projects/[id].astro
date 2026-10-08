@@ -166,14 +166,17 @@ const lastUpdated = data.updated ?? posts.at(-1)?.data.date ?? data.started;
         <div class="split-side stack">
           <h2 class="section-title">Decisions</h2>
           <div class="panel">
-            <div class="panel-head label">What I chose, and why</div>
+            <div class="panel-head label">What I chose</div>
             <ol class="decisions" role="list">
-              {data.decisions.map((decision, i) => (
-                <li>
-                  <span class="n">{String(i + 1).padStart(2, '0')}</span>
-                  <span>{decision}</span>
-                </li>
-              ))}
+              {data.decisions.map((decision, i) => {
+                const { text, post } = typeof decision === 'string' ? { text: decision, post: undefined } : decision;
+                return (
+                  <li>
+                    <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                    <span>{post ? <a href={href(`/posts/${post.id}/`)}>{text}</a> : text}</span>
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>
