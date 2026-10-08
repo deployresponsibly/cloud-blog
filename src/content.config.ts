@@ -85,7 +85,10 @@ const projects = defineCollection({
     // Or: a ready-made image in /public, e.g. '/diagrams/my-diagram.svg'. Used when there is no `architecture`.
     diagram: z.string().optional(),
     diagramCaption: z.string().optional(),
-    decisions: z.array(z.string()).default([]),
+    // Short choices, one line each. A plain string, or { text, post } to link the post that explains why.
+    decisions: z
+      .array(z.union([z.string(), z.object({ text: z.string(), post: reference('posts').optional() })]))
+      .default([]),
     // Titles of posts you plan to write next; shown dashed.
     planned: z.array(z.string()).default([]),
   }),

@@ -43,10 +43,9 @@ detail:
     - { from: tv, to: thermo, label: blocked, dashed: true, both: true }
     - { from: thermo, to: cam, label: blocked, dashed: true, both: true }
 decisions:
-  - Mapped one SSID to one VLAN for base isolation, with rules that block IoT and guest traffic to the main network while main can still reach them.
-  - Used VqLANs for isolation inside a single VLAN, so unrelated devices on the same network can't talk to each other either.
-  - Turned on device-level isolation with Device Active Protect, with device quarantine enabled.
-  - This enables a multi-layered defense against what I consider malicious IoT devices that I choose to have in my house.
+  - One SSID per VLAN, with main able to reach IoT and guests but not the reverse
+  - VqLANs for isolation inside a single VLAN
+  - Device Active Protect, with quarantine for new devices
 planned:
   - Why isolate IoT devices and guests at all
   - VLANs on Firewalla

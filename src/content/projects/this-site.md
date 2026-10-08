@@ -27,13 +27,16 @@ architecture:
     - { from: reader, to: cdn, label: request }
     - { from: cdn, to: storage, label: origin, dashed: true }
 decisions:
-  - Chose a static site over a CMS, so every page is a file in the repo and there is no server to run.
-  - Kept the S3 bucket private and put CloudFront in front of it with Origin Access Control, so the only way to read the site is through the CDN.
-  - Used CloudFront's Free flat-rate plan. It includes a WAF but allows only five rules, managed response headers and no access logs, so the design fits inside those limits.
-  - Left DNS in the AWS account that already owns the domain and reached it from the site account through a second Terraform provider.
-  - Stored Terraform state in S3 with native locking instead of adding a DynamoDB table.
-  - Split the pipeline in two. GitHub builds the site with no AWS access; a CodeBuild-hosted runner deploys the finished artifact using a role scoped to one bucket and one distribution.
-  - Pinned every GitHub Action to a commit SHA, and made GitHub reject any that are not.
+  - text: Static site over a CMS
+    post: choosing-the-stack
+  - text: Private S3 bucket behind CloudFront with Origin Access Control
+    post: hosting-on-s3-and-cloudfront
+  - text: CloudFront's Free flat-rate plan
+    post: living-inside-the-cloudfront-free-plan
+  - DNS left in the existing account, reached through a second Terraform provider
+  - Terraform state in S3 with native locking, no DynamoDB
+  - GitHub builds with no AWS access, a CodeBuild runner deploys
+  - Every GitHub Action pinned to a commit SHA
 planned:
   - The deploy pipeline
   - What broke along the way
